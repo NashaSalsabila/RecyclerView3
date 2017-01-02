@@ -58,6 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/textViewDeskripsi"
+            android:layout_toRightOf="@id/buttonEdit"
             android:layout_marginLeft="16dp"
             android:text="DELETE"
             android:textColor="?attr/colorAccent" />
