@@ -6,9 +6,11 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import java.util.ArrayList;
 
@@ -18,7 +20,8 @@ import model.Hotel;
 public class MainActivity extends AppCompatActivity implements HotelAdapter.IHotelAdapter {
 
     public static final String HOTEL = "hotel";
-    ArrayList<Hotel> mList = new ArrayList<>();
+    private static final int REQUEST_CODE_ADD = 88;
+    ArrayList<Hotel> mList = new ArrayList();
     HotelAdapter mAdapter;
 
     @Override
@@ -65,4 +68,22 @@ public class MainActivity extends AppCompatActivity implements HotelAdapter.IHot
         intent.putExtra(HOTEL, mList.get(pos));
         startActivity(intent);
     }
+    
+    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+    public void setFab(FloatingActionButton fab) {
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) 
+            {
+             goAdd();   
+            }
+        });
+    }
+
+    private void goAdd() 
+    {
+        startActivityForResult(new Intent(this,InputActivity.class), REQUEST_CODE_ADD);
+    }
+
 }

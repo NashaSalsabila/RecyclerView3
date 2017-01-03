@@ -1,4 +1,4 @@
-package model;
+package id.sch.smktelkom_mlg.learn.recyclerview3;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -13,14 +13,19 @@ import android.widget.ImageView;
 
 import id.sch.smktelkom_mlg.learn.recyclerview3.MainActivity;
 import id.sch.smktelkom_mlg.learn.recyclerview3.R;
+import model.Hotel;
 
 public class InputActivity extends AppCompatActivity
 {
     static final int REQUEST_IMAGE_GET = 1;
-    EditText etJudul, etDeskripsi, etDetail, etLokasi;
+    EditText etJudul;
+    EditText etDeskripsi;
+    EditText etDetail;
+    EditText etLokasi;
     ImageView ivfoto;
     Uri uriFoto;
     Hotel hotel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,16 +37,6 @@ public class InputActivity extends AppCompatActivity
         etLokasi = (EditText) findViewById(R.id.editTextLokasi);
         ivfoto = (ImageView) findViewById(R.id.imageViewFoto);
 
-        hotel = (Hotel) getIntent().getSerializableExtra(id.sch.smktelkom_mlg.learn.recyclerview3.MainActivity.HOTEL);
-        if (hotel!=null)
-        {
-            setTitle("Edit "+hotel.judul);
-            fillData();
-        }
-        else
-        {
-            setTitle("New Hotel");
-        }
 
         ivfoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,16 +51,6 @@ public class InputActivity extends AppCompatActivity
                 doSave();
             }
         });
-    }
-
-    private void fillData()
-    {
-        etJudul.setText(hotel.judul);
-        etDeskripsi.setText(hotel.deskripsi);
-        etDetail.setText(hotel.detail);
-        etLokasi.setText(hotel.lokasi);
-        uriFoto = Uri.parse(hotel.foto);
-        ivfoto.setImageURI(uriFoto);
     }
 
     private void doSave()
