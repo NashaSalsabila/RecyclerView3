@@ -152,5 +152,4 @@ public class InputActivity extends AppCompatActivity
             ivfoto.setImageURI(uriFoto);
         }
     }
-
 }

@@ -8,9 +8,13 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -26,6 +30,12 @@ public class MainActivity extends AppCompatActivity implements HotelAdapter.IHot
     ArrayList<Hotel> mList = new ArrayList();
     HotelAdapter mAdapter;
     int itemPos;
+    ArrayList<Hotel> mListAll = new ArrayList<>();
+    boolean isFilltered;
+    ArrayList<Hotel> mListMapFilter = new ArrayList<>();
+    String mQuery;
+    private boolean isFiltered;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements HotelAdapter.IHot
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        mAdapter = new HotelAdapter(this,mList);
+        mAdapter = new HotelAdapter(this, mList);
         recyclerView.setAdapter(mAdapter);
 
         fillData();
@@ -51,15 +61,15 @@ public class MainActivity extends AppCompatActivity implements HotelAdapter.IHot
         String[] arFoto = new String[a.length()];
         for (int i = 0; i < arFoto.length; i++) {
 
-            int id = a.getResourceId(i,0);
-            arFoto[i] = ContentResolver.SCHEME_ANDROID_RESOURCE+"://"
-                    +resources.getResourcePackageName(id)+'/'
-                    +resources.getResourceTypeName(id)+'/'
-                    +resources.getResourceEntryName(id);
+            int id = a.getResourceId(i, 0);
+            arFoto[i] = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+                    + resources.getResourcePackageName(id) + '/'
+                    + resources.getResourceTypeName(id) + '/'
+                    + resources.getResourceEntryName(id);
         }
         a.recycle();
         for (int i = 0; i < arJudul.length; i++) {
-            mList.add(new Hotel(arJudul[i], arDeskripsi[i], arFoto[i],arDetail[i],
+            mList.add(new Hotel(arJudul[i], arDeskripsi[i], arFoto[i], arDetail[i],
                     arLokasi[i]));
         }
         mAdapter.notifyDataSetChanged();
@@ -67,71 +77,140 @@ public class MainActivity extends AppCompatActivity implements HotelAdapter.IHot
 
     @Override
     public void doClick(int pos) {
-        Intent intent = new Intent(this,DetailActivity.class);
+        Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(HOTEL, mList.get(pos));
         startActivity(intent);
     }
-    
+
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
     public void setFab(FloatingActionButton fab) {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) 
-            {
-             goAdd();   
+            public void onClick(View v) {
+                goAdd();
             }
         });
     }
 
-    private void goAdd() 
-    {
-        startActivityForResult(new Intent(this,InputActivity.class), REQUEST_CODE_ADD);
+    private void goAdd() {
+        startActivityForResult(new Intent(this, InputActivity.class), REQUEST_CODE_ADD);
     }
-    
+
     @Override
-    public void doEdit(int pos)
-    {
+    public void doEdit(int pos) {
         itemPos = pos;
         Intent intent = new Intent(this, InputActivity.class);
         intent.putExtra(HOTEL, mList.get(pos));
         startActivityForResult(intent, REQUEST_CODE_EDIT);
     }
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_ADD && resultCode == RESULT_OK)
-        {
+        if (requestCode == REQUEST_CODE_ADD && resultCode == RESULT_OK) {
             Hotel hotel = (Hotel) data.getSerializableExtra(HOTEL);
             mList.add(hotel);
-            mAdapter.notifyDataSetChanged();
-        }
-        else if (requestCode == REQUEST_CODE_EDIT  && resultCode == RESULT_OK)
-        {
+            if (isFiltered) mListAll.add(hotel);
+            doFilter(mQuery);
+
+        } else if (requestCode == REQUEST_CODE_EDIT && resultCode == RESULT_OK) {
             Hotel hotel = (Hotel) data.getSerializableExtra(HOTEL);
             mList.remove(itemPos);
-            mList.add(itemPos,hotel);
+            if (isFiltered) mListAll.remove(mListMapFilter.get(itemPos).intValue());
+            mList.add(itemPos, hotel);
+            if (isFiltered) mListAll.add(mListMapFilter.get(itemPos), hotel);
             mAdapter.notifyDataSetChanged();
         }
     }
+
     @Override
-    public void doDelete(int pos)
-    {
+    public void doDelete(int pos) {
         itemPos = pos;
         final Hotel hotel = mList.get(pos);
         mList.remove(itemPos);
+        if (isFiltered) mListAll.remove(mListMapFilter.get(itemPos).intValue());
         mAdapter.notifyDataSetChanged();
 
-        Snackbar.make(findViewById(R.id.fab),hotel.judul+" Terhapus",Snackbar.LENGTH_LONG)
+        Snackbar.make(findViewById(R.id.fab), hotel.judul + " Terhapus", Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mList.add(itemPos,hotel);
+                        mList.add(itemPos, hotel);
                         mAdapter.notifyDataSetChanged();
                     }
                 }).show();
     }
+
+    @Override
+    public void doFav(int pos) {
+
+    }
+
+    @Override
+    public void doShare(int pos) {
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView)
+                MenuItemCompat.getActionView(searchItem);
+
+        searchView.setOnQueryTextListener(
+                new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return false;
+                    }
+
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        mQuery = newText.toLowerCase();
+                        doFilter(mQuery);
+                        return true;
+                    }
+                });
+        return  true;
+    }
+
+private void doFilter(String query)
+{
+    if (!isFiltered)
+    {
+        mListAll.clear();
+        mListAll.addAll(mList);
+        isFiltered = true;
+    }
+
+    mList.clear();
+    if (query==null||query.isEmpty())
+    {
+        mList.addAll(mListAll);
+        isFilltered = false;
+    }
+    else
+    {
+        mListMapFilter.clear();
+        for (int i = 0; i < mListAll.size(); i++)
+        {
+            Hotel hotel = mListAll.get(i);
+            if (hotel.judul.toLowerCase().contains(query) ||
+                    hotel.deskripsi.toLowerCase().contains(query) ||
+                    hotel.lokasi.toLowerCase().contains(query))
+            {
+                mList.add(hotel);
+                mListMapFilter.add(i);
+            }
+
+        }
+    }
+    mAdapter.notifyDataSetChanged();
+}
 
 
 }
