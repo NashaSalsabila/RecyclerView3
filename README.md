@@ -10,7 +10,7 @@ Kelas : XI RPL 2
 <br>
 No Urut : 18 
 <br>
-NIS :9998690999 
+NIS :4783/1502.070
 <br>
 Sekolah : SMK TELKOM MALANG 
 
